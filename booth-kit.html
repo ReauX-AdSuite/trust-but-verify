@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Booth Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+  :root{
+    --abyss:#000C1A; --panel:#0a2036; --line:#12324a;
+    --cyan:#0FBDD2; --glow:#8BEEF7; --pink:#E91E8C; --green-glow:#1fd18f;
+    --ink:#eaf6fb; --ink-soft:#a9c6d6; --ink-dim:#6f92a6;
+    --font:'Montserrat',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:radial-gradient(1000px 500px at 50% -10%, rgba(15,189,210,.14), transparent 60%), var(--abyss);
+    color:var(--ink);font-family:var(--font);font-weight:600;line-height:1.5;min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:820px;margin:0 auto}
+  .brand{font-weight:800;font-size:24px;color:var(--cyan);text-shadow:0 0 18px rgba(15,189,210,.45)}
+  .tag{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-dim);font-weight:700;margin-top:2px}
+  h1{font-size:clamp(24px,5vw,34px);font-weight:800;margin:18px 0 4px;text-wrap:balance}
+  .lede{color:var(--ink-soft);font-weight:600;max-width:60ch}
+  .card{background:linear-gradient(180deg,rgba(10,32,54,.85),rgba(6,25,46,.85));border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:18px}
+  label.f{display:block}
+  label.f span{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;margin-bottom:6px}
+  input[type=url]{width:100%;padding:14px;border-radius:11px;background:#03162a;border:1.5px solid var(--line);color:var(--ink);font-family:var(--mono);font-size:15px;font-weight:700}
+  input[type=url]:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 4px rgba(15,189,210,.18)}
+  .helper{font-size:13px;color:var(--ink-dim);margin-top:8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+  @media (max-width:640px){.grid{grid-template-columns:1fr}}
+  .qrcard{background:linear-gradient(180deg,rgba(10,32,54,.85),rgba(6,25,46,.85));border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center;display:flex;flex-direction:column;align-items:center}
+  .qrcard h2{font-size:17px;margin:0 0 4px;color:var(--glow)}
+  .qrcard .sub{font-size:12px;color:var(--ink-dim);font-weight:700;margin-bottom:14px}
+  .qrbox{width:230px;height:230px;background:#fff;border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:center}
+  .qrbox img,.qrbox canvas{width:100%!important;height:100%!important}
+  .qrbox.empty{color:#556;font-size:12px;font-weight:700}
+  .link{font-family:var(--mono);font-size:12.5px;color:var(--cyan);word-break:break-all;margin-top:12px;min-height:1em}
+  .row{display:flex;gap:8px;margin-top:12px;width:100%}
+  .btn{flex:1;-webkit-appearance:none;appearance:none;border:none;cursor:pointer;font-family:var(--font);font-weight:800;font-size:13px;padding:11px 12px;border-radius:10px;background:linear-gradient(180deg,var(--glow),var(--cyan));color:#00121d}
+  .btn.ghost{background:transparent;color:var(--cyan);border:1.5px solid var(--cyan)}
+  .btn:disabled{filter:grayscale(.5) brightness(.7);cursor:not-allowed}
+  .steps{margin:8px 0 0;padding-left:20px}
+  .steps li{margin:7px 0;color:var(--ink-soft);font-weight:600}
+  .steps code{font-family:var(--mono);font-size:12px;color:var(--glow);background:#03162a;padding:1px 5px;border-radius:5px}
+  .pink{color:var(--pink);font-weight:800}
+  .note{font-size:12px;color:var(--ink-dim);margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">CyReauX</div>
+  <div class="tag">OutSmart The Breach</div>
+  <h1>Trust but Verify &middot; Booth Kit</h1>
+  <p class="lede">Paste the address where you hosted <code style="font-family:var(--mono);color:var(--glow)">index.html</code>, and this makes the two QR codes and links you need for the booth. Print the sign-up QR big, and open the leaderboard link full screen on your monitor.</p>
+
+  <div class="card">
+    <label class="f" for="u"><span>Your hosted game URL</span></label>
+    <input type="url" id="u" placeholder="https://your-site.netlify.app/" autocomplete="off" spellcheck="false">
+    <p class="helper">Example: <span style="font-family:var(--mono)">https://trust-but-verify.netlify.app/</span> . Do not add anything after the slash; this tool adds <code>#leaderboard</code> for you.</p>
+  </div>
+
+  <div class="grid">
+    <div class="qrcard">
+      <h2>Sign-up / Play</h2>
+      <div class="sub">Print this on the booth sign</div>
+      <div class="qrbox empty" id="qr1">Enter your URL above</div>
+      <div class="link" id="l1"></div>
+      <div class="row">
+        <button class="btn" id="d1" disabled>Download PNG</button>
+      </div>
+    </div>
+    <div class="qrcard">
+      <h2>Leaderboard / Monitor</h2>
+      <div class="sub">Open this on the booth screen</div>
+      <div class="qrbox empty" id="qr2">Enter your URL above</div>
+      <div class="link" id="l2"></div>
+      <div class="row">
+        <button class="btn ghost" id="d2" disabled>Download PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 6px;font-size:18px;color:var(--glow)">If you have not hosted it yet (about 60 seconds)</h2>
+    <ol class="steps">
+      <li>Go to <code>app.netlify.com/drop</code> and sign in (free).</li>
+      <li>Drag your <code>index.html</code> onto the page. It uploads and gives you a URL like <code>https://random-name.netlify.app</code>.</li>
+      <li>Paste that URL into the box above. Both QR codes appear instantly.</li>
+    </ol>
+    <p class="note">Any static host works the same way (Vercel, GitHub Pages, or a <span class="pink">cyreaux.com</span> subpath). The URL is the only thing this kit needs.</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 6px;font-size:18px;color:var(--glow)">Getting the leaderboard onto the screen</h2>
+    <ol class="steps">
+      <li>On the laptop driving the monitor, open the <span class="pink">Leaderboard / Monitor</span> link above (it ends in <code>#leaderboard</code>).</li>
+      <li>Press <code>F11</code> for full screen. The board refreshes itself every 12 seconds, no clicking needed.</li>
+      <li>It reads live from your Supabase, so every phone that finishes appears automatically. Nothing else to connect.</li>
+      <li>Set the laptop to never sleep for the day (or keep the mouse awake) so the screen stays on.</li>
+    </ol>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  var input = document.getElementById('u');
+  function normalize(v){
+    v = (v||'').trim();
+    if(!v) return '';
+    if(!/^https?:\/\//i.test(v)) v = 'https://' + v;
+    v = v.replace(/#.*$/,'');                 // strip any existing hash
+    return v;
+  }
+  function makeQR(boxId, linkId, dlId, text, filename){
+    var box = document.getElementById(boxId);
+    var link = document.getElementById(linkId);
+    var dl = document.getElementById(dlId);
+    box.innerHTML = ''; box.classList.remove('empty');
+    link.textContent = text;
+    if(typeof QRCode === 'undefined'){ box.textContent = 'QR library did not load (need internet once).'; return; }
+    new QRCode(box, { text:text, width:760, height:760, colorDark:'#000C1A', colorLight:'#ffffff', correctLevel:QRCode.CorrectLevel.M });
+    dl.disabled = false;
+    dl.onclick = function(){
+      var cv = box.querySelector('canvas');
+      var data = cv ? cv.toDataURL('image/png') : (box.querySelector('img')||{}).src;
+      if(!data) return;
+      var a = document.createElement('a'); a.href = data; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    };
+  }
+  function render(){
+    var base = normalize(input.value);
+    var box1 = document.getElementById('qr1'), box2 = document.getElementById('qr2');
+    if(!base){
+      box1.innerHTML='Enter your URL above'; box1.classList.add('empty');
+      box2.innerHTML='Enter your URL above'; box2.classList.add('empty');
+      document.getElementById('l1').textContent=''; document.getElementById('l2').textContent='';
+      document.getElementById('d1').disabled=true; document.getElementById('d2').disabled=true;
+      return;
+    }
+    var play = base;
+    var board = base.replace(/\/?$/, '/') + '#leaderboard';
+    makeQR('qr1','l1','d1', play, 'cyreaux-signup-qr.png');
+    makeQR('qr2','l2','d2', board, 'cyreaux-leaderboard-qr.png');
+  }
+  input.addEventListener('input', render);
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,1337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trust but Verify</title>
+<meta name="description" content="CyReauX booth demo: your AI is confident, confidence isn't proof.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+  /* ============================================================
+     CyReauX "Trust but Verify" - brand system
+     Abyss navy base, Cyber Cyan accent, Glow Cyan highlight,
+     Accent pink for tagline/pull-quotes, Growth Green for verified.
+     Committed single dark theme. No em-dashes anywhere in copy.
+     ============================================================ */
+  :root{
+    --abyss:#000C1A;
+    --abyss-2:#03162a;
+    --panel:#06192e;
+    --panel-2:#0a2036;
+    --line:#12324a;
+    --cyan:#0FBDD2;
+    --glow:#8BEEF7;
+    --pink:#E91E8C;
+    --green:#097055;
+    --green-glow:#1fd18f;   /* legible green tint for text/glow on navy */
+    --ink:#eaf6fb;
+    --ink-soft:#a9c6d6;
+    --ink-dim:#6f92a6;
+    --danger:#ff5d7a;
+    --radius:14px;
+    --maxw:600px;
+    --font:'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(15,189,210,.14), transparent 60%),
+      radial-gradient(900px 500px at 90% 110%, rgba(233,30,140,.10), transparent 55%),
+      var(--abyss);
+    color:var(--ink);
+    font-family:var(--font);
+    font-weight:600;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  a{color:var(--cyan)}
+  h1,h2,h3{font-weight:800;line-height:1.15;text-wrap:balance;margin:0}
+  p{margin:0}
+  .hidden{display:none !important}
+
+  /* Layout shell */
+  .app{min-height:100%;display:flex;flex-direction:column}
+  .stage{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    padding:24px 16px calc(40px + env(safe-area-inset-bottom,0px));
+    padding-top:calc(20px + env(safe-area-inset-top,0px));
+  }
+  .card{
+    width:100%;max-width:var(--maxw);
+    background:linear-gradient(180deg, rgba(10,32,54,.85), rgba(6,25,46,.85));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 20px;
+    box-shadow:0 24px 60px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(139,238,247,.06);
+    backdrop-filter:blur(4px);
+  }
+  .card + .card{margin-top:16px}
+
+  /* Brand bits */
+  .brandrow{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px}
+  .wordmark{
+    font-weight:800;letter-spacing:.5px;font-size:26px;color:var(--cyan);
+    text-shadow:0 0 18px rgba(15,189,210,.45);
+  }
+  .brandtag{
+    font-size:11px;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--ink-dim);font-weight:700;
+  }
+  .eyebrow{
+    font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--glow);font-weight:700;margin-bottom:10px;
+  }
+  .tagline{
+    color:var(--pink);font-weight:800;font-style:italic;
+    font-size:clamp(20px,5.5vw,26px);line-height:1.2;
+    text-shadow:0 0 22px rgba(233,30,140,.35);
+  }
+  .gametitle{
+    font-size:clamp(30px,9vw,46px);letter-spacing:-.01em;margin:8px 0 4px;
+    background:linear-gradient(90deg,var(--glow),var(--cyan));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .lede{color:var(--ink-soft);font-weight:600;font-size:15px}
+  .muted{color:var(--ink-dim);font-weight:600}
+
+  /* Forms */
+  label.field{display:block;margin:14px 0 0}
+  label.field span{
+    display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-soft);margin-bottom:6px;font-weight:700;
+  }
+  input[type=text],input[type=email]{
+    width:100%;padding:14px 14px;border-radius:11px;
+    background:var(--abyss-2);border:1.5px solid var(--line);
+    color:var(--ink);font-family:var(--font);font-weight:700;font-size:16px;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input::placeholder{color:var(--ink-dim);font-weight:600}
+  input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 4px rgba(15,189,210,.18)}
+  input:disabled{opacity:.55;cursor:not-allowed}
+  input.answer{font-family:var(--mono);letter-spacing:.02em}
+
+  .err{color:var(--danger);font-size:13px;font-weight:700;margin-top:8px;min-height:1px}
+
+  /* Buttons */
+  .btn{
+    -webkit-appearance:none;appearance:none;border:none;cursor:pointer;
+    font-family:var(--font);font-weight:800;font-size:16px;letter-spacing:.01em;
+    padding:15px 20px;border-radius:12px;width:100%;
+    background:linear-gradient(180deg,var(--glow),var(--cyan));
+    color:#00121d;text-shadow:0 1px 0 rgba(255,255,255,.25);
+    box-shadow:0 12px 30px -12px rgba(15,189,210,.7), inset 0 1px 0 rgba(255,255,255,.35);
+    transition:transform .06s ease, box-shadow .15s, filter .15s;
+  }
+  .btn:hover{filter:brightness(1.05);box-shadow:0 16px 36px -12px rgba(15,189,210,.85)}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{filter:grayscale(.4) brightness(.7);cursor:not-allowed;box-shadow:none}
+  .btn.ghost{
+    background:transparent;color:var(--cyan);border:1.5px solid var(--cyan);
+    box-shadow:none;text-shadow:none;
+  }
+  .btn.ghost:hover{background:rgba(15,189,210,.08);filter:none}
+  .btn.pink{
+    background:linear-gradient(180deg,#ff5cb0,var(--pink));color:#160009;
+    box-shadow:0 12px 30px -12px rgba(233,30,140,.7), inset 0 1px 0 rgba(255,255,255,.3);
+  }
+  .btn.verify{
+    background:linear-gradient(180deg,#2fe6a6,var(--green));color:#00160f;
+    box-shadow:0 12px 30px -12px rgba(31,209,143,.6), inset 0 1px 0 rgba(255,255,255,.3);
+  }
+  .btnrow{display:flex;gap:10px;margin-top:18px}
+  .btnrow .btn{width:auto;flex:1}
+
+  /* Back / Start over controls (during clues) */
+  .clue-controls{
+    width:100%;max-width:var(--maxw);display:flex;gap:10px;margin:12px auto 0;
+  }
+  .btn.small{
+    width:auto;flex:1;font-size:13px;padding:11px 14px;
+    background:transparent;color:var(--ink-soft);border:1.5px solid var(--line);
+    box-shadow:none;text-shadow:none;font-weight:700;
+  }
+  .btn.small:hover{filter:none;border-color:var(--cyan);color:var(--cyan);background:rgba(15,189,210,.06)}
+  .btn.small.danger{color:var(--ink-dim)}
+  .btn.small.danger:hover{border-color:var(--pink);color:#ff7ac0;background:rgba(233,30,140,.06)}
+
+  /* Timer bar */
+  .timerwrap{
+    position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+    width:100%;display:flex;justify-content:center;
+    padding:8px 16px;margin:-4px 0 8px;
+  }
+  .timer{
+    width:100%;max-width:var(--maxw);
+    display:flex;align-items:center;gap:12px;
+    background:rgba(3,22,42,.9);border:1px solid var(--line);
+    border-radius:12px;padding:9px 14px;backdrop-filter:blur(6px);
+  }
+  .timer .clock{
+    font-family:var(--mono);font-weight:700;font-size:20px;color:var(--glow);
+    font-variant-numeric:tabular-nums;min-width:64px;
+  }
+  .timer .track{flex:1;height:7px;border-radius:99px;background:var(--abyss-2);overflow:hidden}
+  .timer .fill{height:100%;width:100%;background:linear-gradient(90deg,var(--cyan),var(--glow));transition:width .3s linear}
+  .timer.low .clock{color:var(--danger)}
+  .timer.low .fill{background:linear-gradient(90deg,#ff5d7a,var(--pink))}
+  .timer .step{font-size:12px;color:var(--ink-dim);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+
+  /* Clue mono blocks */
+  .mono-block{
+    font-family:var(--mono);font-weight:400;font-size:14px;color:var(--glow);
+    background:var(--abyss);border:1px solid var(--line);border-left:3px solid var(--cyan);
+    border-radius:10px;padding:14px;margin-top:12px;
+    overflow-x:auto;white-space:pre;word-break:normal;
+    user-select:all;-webkit-user-select:all;
+  }
+  .log-block{
+    font-family:var(--mono);font-weight:400;font-size:12.5px;line-height:1.7;color:var(--ink-soft);
+    background:var(--abyss);border:1px solid var(--line);border-radius:10px;
+    padding:14px;margin-top:12px;overflow-x:auto;white-space:pre;
+  }
+  .prompt-q{margin-top:16px;font-size:17px;font-weight:800;color:var(--ink)}
+
+  /* Advisory bulletin */
+  .advisory{
+    margin-top:12px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;overflow:hidden;
+  }
+  .advisory .head{
+    background:linear-gradient(90deg, rgba(233,30,140,.16), rgba(255,93,122,.06));
+    border-bottom:1px solid var(--line);padding:10px 14px;
+    font-weight:800;letter-spacing:.04em;color:#ffd0e6;font-size:13px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .advisory .sev{
+    display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    background:var(--danger);color:#20030b;padding:2px 8px;border-radius:99px;
+  }
+  .advisory .body{padding:14px;font-size:13.5px;color:var(--ink-soft);font-weight:600}
+  .advisory dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px}
+  .advisory dt{color:var(--ink-dim);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;padding-top:2px}
+  .advisory dd{margin:0;color:var(--ink)}
+  .advisory .summary-line{grid-column:1 / -1;margin-top:6px;color:var(--ink-soft)}
+
+  /* Fact-check card (green success) */
+  .factcheck{
+    margin-top:14px;border:1.5px solid var(--green-glow);border-radius:12px;
+    background:linear-gradient(180deg, rgba(31,209,143,.12), rgba(9,112,85,.10));
+    padding:16px;box-shadow:0 0 34px -14px rgba(31,209,143,.5);
+  }
+  .factcheck .fc-tag{
+    display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--green-glow);margin-bottom:8px;
+  }
+  .factcheck p{color:#dffaef;font-weight:700;font-size:15px}
+  .factcheck .kicker{color:var(--green-glow);font-weight:800}
+
+  /* Technical collapsible */
+  details.tech{
+    margin-top:16px;border:1px dashed var(--line);border-radius:10px;
+    background:rgba(3,22,42,.5);
+  }
+  details.tech > summary{
+    cursor:pointer;list-style:none;padding:11px 14px;
+    font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-soft);display:flex;align-items:center;gap:8px;
+  }
+  details.tech > summary::-webkit-details-marker{display:none}
+  details.tech > summary .chev{transition:transform .2s;color:var(--cyan)}
+  details.tech[open] > summary .chev{transform:rotate(90deg)}
+  details.tech .tech-body{
+    padding:0 14px 14px;font-size:13.5px;color:var(--ink-soft);font-weight:600;line-height:1.6;
+  }
+  details.tech .tech-body code{
+    font-family:var(--mono);font-size:12px;color:var(--glow);
+    background:var(--abyss);padding:1px 5px;border-radius:5px;
+  }
+
+  .helper{margin-top:12px;font-size:13px;color:var(--ink-dim);font-weight:600}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;
+    letter-spacing:.06em;text-transform:uppercase;padding:5px 11px;border-radius:99px;
+  }
+  .pill.cyan{color:var(--glow);border:1px solid rgba(15,189,210,.4);background:rgba(15,189,210,.08)}
+  .pill.green{color:var(--green-glow);border:1px solid rgba(31,209,143,.5);background:rgba(31,209,143,.10)}
+  .pill.neutral{color:var(--ink-soft);border:1px solid var(--line);background:rgba(255,255,255,.03)}
+
+  /* Results */
+  .result-hero{text-align:center;padding:6px 0 4px}
+  .result-time{
+    font-family:var(--mono);font-weight:700;font-size:clamp(44px,15vw,72px);
+    font-variant-numeric:tabular-nums;line-height:1;
+    background:linear-gradient(90deg,var(--glow),var(--cyan));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .result-time.fooled{background:linear-gradient(90deg,#ffb3d6,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .teach{
+    margin-top:16px;text-align:center;font-style:italic;font-weight:800;
+    font-size:clamp(18px,5vw,22px);color:var(--pink);
+  }
+  .cta-box{
+    margin-top:18px;text-align:center;border-top:1px solid var(--line);padding-top:18px;
+  }
+  .qr-holder{
+    width:150px;height:150px;margin:12px auto 6px;background:#fff;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;padding:8px;
+  }
+  .qr-holder img,.qr-holder canvas{width:100%;height:100%}
+  .cta-link{
+    display:inline-block;margin-top:6px;font-family:var(--mono);font-weight:700;
+    color:var(--cyan);font-size:15px;word-break:break-all;
+  }
+
+  /* Operator footer */
+  .op-footer{
+    width:100%;max-width:var(--maxw);margin:22px auto 0;text-align:center;
+    font-size:11px;color:var(--ink-dim);letter-spacing:.06em;
+  }
+  .op-footer a{color:var(--ink-dim);text-decoration:none;font-weight:700;margin:0 8px}
+  .op-footer a:hover{color:var(--cyan)}
+
+  /* ================= LEADERBOARD (monitor) ================= */
+  #view-leaderboard{padding:0}
+  .lb{
+    min-height:100%;padding:clamp(20px,3.5vw,44px);
+    display:flex;flex-direction:column;gap:clamp(16px,2.5vw,30px);
+  }
+  .lb-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .lb-title{font-size:clamp(30px,5vw,64px);letter-spacing:-.01em}
+  .lb-title .cy{color:var(--cyan)}
+  .lb-sub{color:var(--pink);font-style:italic;font-weight:800;font-size:clamp(15px,2.2vw,28px)}
+  .lb-live{
+    display:inline-flex;align-items:center;gap:9px;font-size:clamp(12px,1.5vw,18px);
+    color:var(--ink-soft);font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  }
+  .lb-dot{width:11px;height:11px;border-radius:99px;background:var(--green-glow);box-shadow:0 0 12px var(--green-glow);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .lb-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:clamp(16px,2.4vw,30px);flex:1;min-height:0}
+  @media (max-width:820px){.lb-grid{grid-template-columns:1fr}}
+  .lb-panel{
+    background:linear-gradient(180deg, rgba(10,32,54,.7), rgba(6,25,46,.7));
+    border:1px solid var(--line);border-radius:18px;padding:clamp(16px,2vw,26px);
+    display:flex;flex-direction:column;min-height:0;
+  }
+  .lb-panel.fooled{border-color:rgba(233,30,140,.35)}
+  .lb-panel h2{
+    font-size:clamp(18px,2.4vw,30px);margin-bottom:14px;display:flex;align-items:center;gap:12px;
+  }
+  .lb-panel.verified h2{color:var(--green-glow)}
+  .lb-panel.fooled h2{color:var(--pink)}
+  .lb-rows{display:flex;flex-direction:column;gap:8px;overflow:auto}
+  .lb-row{
+    display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;
+    padding:clamp(9px,1.3vw,15px) clamp(12px,1.6vw,18px);border-radius:12px;
+    background:rgba(3,22,42,.6);border:1px solid var(--line);
+  }
+  .lb-row .rank{
+    font-family:var(--mono);font-weight:700;font-size:clamp(16px,2vw,26px);
+    color:var(--ink-dim);min-width:1.6em;text-align:right;font-variant-numeric:tabular-nums;
+  }
+  .lb-row .who{font-weight:800;font-size:clamp(15px,1.9vw,25px);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lb-row .t{font-family:var(--mono);font-weight:700;font-size:clamp(16px,2vw,27px);color:var(--glow);font-variant-numeric:tabular-nums}
+  .lb-row.top1{border-color:var(--green-glow);background:rgba(31,209,143,.10)}
+  .lb-row.top1 .rank{color:var(--green-glow)}
+  .lb-panel.fooled .lb-row .t{color:var(--pink)}
+  .lb-empty{color:var(--ink-dim);font-weight:700;font-size:clamp(14px,1.8vw,22px);padding:18px 6px}
+  .lb-foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;color:var(--ink-dim);font-size:clamp(11px,1.4vw,16px);font-weight:700}
+  .lb-foot .brandmini{color:var(--cyan);letter-spacing:.2em;text-transform:uppercase}
+  .sample-tag{
+    font-size:clamp(10px,1.3vw,14px);font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-dim);border:1px dashed var(--line);border-radius:99px;padding:3px 10px;
+  }
+
+  /* ================= EXPORT ================= */
+  .exp-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12.5px}
+  .exp-table th,.exp-table td{border:1px solid var(--line);padding:8px 10px;text-align:left;font-weight:600}
+  .exp-table th{background:var(--panel-2);color:var(--ink-soft);font-weight:800;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+  .exp-table td{color:var(--ink-soft);font-family:var(--mono);font-size:12px}
+  .exp-scroll{overflow-x:auto;border-radius:10px}
+
+  /* Consent checkbox */
+  .consent{
+    display:flex;gap:11px;align-items:flex-start;margin-top:16px;cursor:pointer;
+    background:rgba(3,22,42,.5);border:1px solid var(--line);border-radius:11px;padding:12px 13px;
+  }
+  .consent input{
+    appearance:none;-webkit-appearance:none;flex:0 0 auto;width:22px;height:22px;margin:1px 0 0;
+    border:1.5px solid var(--cyan);border-radius:6px;background:var(--abyss-2);cursor:pointer;position:relative;
+    transition:background .15s, box-shadow .15s;
+  }
+  .consent input:checked{background:var(--cyan)}
+  .consent input:checked::after{
+    content:"";position:absolute;left:7px;top:3px;width:5px;height:10px;
+    border:solid #00121d;border-width:0 2.5px 2.5px 0;transform:rotate(45deg);
+  }
+  .consent input:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(15,189,210,.22)}
+  .consent span{font-size:12.5px;color:var(--ink-soft);font-weight:600;line-height:1.45}
+
+  /* Fooled variant of the reveal card (pink) */
+  .factcheck.fooled{
+    border-color:var(--pink);
+    background:linear-gradient(180deg, rgba(233,30,140,.14), rgba(233,30,140,.06));
+    box-shadow:0 0 34px -14px rgba(233,30,140,.55);
+  }
+  .factcheck.fooled .fc-tag{color:#ff7ac0}
+  .factcheck.fooled p{color:#ffe3f2}
+  .factcheck.fooled .kicker{color:#ff7ac0}
+
+  /* Timer freeze overlay */
+  .freeze-overlay{
+    position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+    padding:24px 16px calc(24px + env(safe-area-inset-bottom,0px));
+    padding-top:calc(24px + env(safe-area-inset-top,0px));
+    background:rgba(0,7,15,.86);backdrop-filter:blur(6px);
+  }
+  .freeze-card{
+    width:100%;max-width:460px;text-align:center;
+    background:linear-gradient(180deg, rgba(10,32,54,.96), rgba(6,25,46,.96));
+    border:1px solid var(--line);border-radius:var(--radius);padding:26px 22px;
+    box-shadow:0 30px 70px -30px #000, inset 0 1px 0 rgba(139,238,247,.08);
+    max-height:100%;overflow:auto;
+  }
+  .freeze-card .bighead{
+    font-size:clamp(26px,7vw,34px);margin:6px 0 8px;
+    background:linear-gradient(90deg,#ffb3d6,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ==================== PLAY VIEW ==================== -->
+  <div id="view-play">
+
+    <!-- Timer (shown during clues) -->
+    <div class="timerwrap hidden" id="timerwrap">
+      <div class="timer" id="timer" role="status" aria-live="off">
+        <span class="clock" id="clock">8:00</span>
+        <div class="track"><div class="fill" id="timerfill"></div></div>
+        <span class="step" id="timerstep">Clue 1 of 3</span>
+      </div>
+    </div>
+
+    <div class="stage">
+
+      <!-- Landing -->
+      <section id="screen-landing" class="card">
+        <div class="brandrow">
+          <span class="wordmark">CyReauX</span>
+        </div>
+        <div style="text-align:center" class="brandtag">OutSmart The Breach</div>
+        <div style="text-align:center;margin-top:18px">
+          <div class="eyebrow">Booth Challenge</div>
+          <div class="tagline">Your AI is confident.<br>Confidence isn't proof.</div>
+          <h1 class="gametitle">Trust but Verify</h1>
+          <p class="lede">Three clues. Your own AI. Eight minutes. One of them is built to fool a good model. Beat it, and claim your spot on the leaderboard.</p>
+        </div>
+
+        <form id="lead-form" novalidate>
+          <label class="field">
+            <span>Your name</span>
+            <input type="text" id="in-name" name="name" autocomplete="name" placeholder="Jordan Rivera" required>
+          </label>
+          <label class="field">
+            <span>Email</span>
+            <input type="email" id="in-email" name="email" autocomplete="email" inputmode="email" placeholder="you@company.com" required>
+          </label>
+          <label class="consent" for="in-consent">
+            <input type="checkbox" id="in-consent">
+            <span>I agree to let CyReauX email me about my results and its AI and cybersecurity services. I can unsubscribe anytime.</span>
+          </label>
+          <div class="err" id="lead-err" aria-live="polite"></div>
+          <button class="btn" type="submit" style="margin-top:16px">Claim my spot</button>
+          <p class="helper" style="text-align:center">Your name and email hold your leaderboard spot. Fastest verified time wins.</p>
+        </form>
+      </section>
+
+      <!-- Instructions -->
+      <section id="screen-instructions" class="card hidden">
+        <div class="eyebrow">How it works</div>
+        <h2 style="font-size:24px;margin-bottom:6px">Here's the deal</h2>
+        <p class="lede" style="margin-top:10px">
+          You'll get 3 clues. Use your own AI, ChatGPT, Claude, Gemini, whatever's on your phone, to help solve each one.
+          One of them is designed to make even a good AI confidently wrong.
+        </p>
+        <p style="margin-top:14px;font-weight:800;color:var(--glow);font-size:17px">Verify before you submit.</p>
+        <div class="pill cyan" style="margin-top:16px">Timer: 8 minutes</div>
+        <p class="helper">The clock starts the moment you hit Start. Switch to your AI app freely, the timer keeps running on real time, so it stays fair for everyone.</p>
+        <button class="btn pink" id="btn-start" style="margin-top:20px">Start the clock</button>
+      </section>
+
+      <!-- Clue 1: decode -->
+      <section id="screen-clue1" class="card hidden">
+        <div class="eyebrow">Clue 1 of 3 &middot; Decode</div>
+        <h2 style="font-size:22px">Read the hidden instruction</h2>
+        <p class="lede" style="margin-top:8px">This string is encoded. Ask your AI to decode it, then follow what it says. Any model does this in seconds.</p>
+        <div class="mono-block" id="b64">Q2hlY2sgdGhlIGFjY2VzcyBsb2cuIE9uZSBlbnRyeSBkb2VzIG5vdCBiZWxvbmcuIEZpbmQgaXQu</div>
+        <label class="field">
+          <span>What does it say? (optional)</span>
+          <input type="text" id="c1-input" placeholder="Type the decoded message" autocomplete="off">
+        </label>
+        <button class="btn" id="c1-continue" style="margin-top:18px">Continue</button>
+
+        <details class="tech">
+          <summary><span class="chev">&#9656;</span> For the technical folks</summary>
+          <div class="tech-body">
+            That is <code>Base64</code>, an encoding, not encryption. It is exactly the kind of encoded payload used to smuggle instructions past naive filters, the input side of a prompt injection (OWASP LLM01). Decoding is trivial for any model. The lesson: encoding is not security, and an instruction can hide inside data.
+          </div>
+        </details>
+      </section>
+
+      <!-- Clue 2: anomaly -->
+      <section id="screen-clue2" class="card hidden">
+        <div class="eyebrow">Clue 2 of 3 &middot; Spot the anomaly</div>
+        <h2 style="font-size:22px">One entry does not belong</h2>
+        <p class="lede" style="margin-top:8px">Here is the access log. Paste it into your AI if you like, but read carefully. One session breaks the pattern.</p>
+<pre class="log-block" id="log">2026-09-24 08:12:03 | user: r.delgado | region: US-East | status: SUCCESS | session: SESSA-1187
+2026-09-24 09:45:21 | user: k.osei    | region: US-East | status: SUCCESS | session: SESSA-1188
+2026-09-24 11:03:57 | user: m.laurent | region: EU-West  | status: SUCCESS | session: SESSA-1189
+2026-09-24 03:17:44 | user: r.delgado | region: EU-East  | status: SUCCESS | session: SESSA-1204  [flagged: PTO through 9/30]
+2026-09-24 14:22:09 | user: k.osei    | region: US-East  | status: SUCCESS | session: SESSA-1191
+2026-09-24 15:58:30 | user: m.laurent | region: EU-West  | status: SUCCESS | session: SESSA-1192</pre>
+        <p class="prompt-q">Which session ID belongs to the entry that doesn't belong?</p>
+        <label class="field">
+          <span>Session ID</span>
+          <input type="text" id="c2-input" class="answer" placeholder="SESSA-0000" autocomplete="off" spellcheck="false">
+        </label>
+        <div class="err" id="c2-err" aria-live="polite"></div>
+        <button class="btn" id="c2-submit" style="margin-top:14px">Submit answer</button>
+
+        <details class="tech">
+          <summary><span class="chev">&#9656;</span> For the technical folks</summary>
+          <div class="tech-body">
+            This is anomaly detection. The odd entry is <code>r.delgado</code> at 03:17 in EU-East while flagged on PTO through 9/30, immediately after a US-East login: impossible travel plus an out-of-policy session at an off hour. An AI can flag it, but only if you hand it the whole log and ask the right question. Weak framing in, weak answer out.
+          </div>
+        </details>
+      </section>
+
+      <!-- Clue 3: the trap -->
+      <section id="screen-clue3" class="card hidden">
+        <div class="eyebrow">Clue 3 of 3 &middot; The trap</div>
+        <h2 style="font-size:22px">Find the fix code</h2>
+        <p class="lede" style="margin-top:8px">Here is a vendor security advisory. Your AI can read it. Answer the question, but remember what we told you at the start: verify before you submit.</p>
+
+        <div class="advisory">
+          <div class="head"><span class="sev">Critical</span> SECURITY ADVISORY: MERIDIAN-SA-2026-0091</div>
+          <div class="body">
+            <dl>
+              <dt>Product</dt><dd>Meridian Sync Connector, versions 4.2 through 4.6</dd>
+              <dt>Severity</dt><dd>Critical</dd>
+              <dd class="summary-line">A flaw in the OAuth token refresh handler allows an authenticated low-privilege session to escalate to full administrative scope without re-authentication.</dd>
+              <dt>Action</dt><dd>Patch immediately to version 4.7, or disable the Sync Connector until patched.</dd>
+            </dl>
+          </div>
+        </div>
+
+        <p class="prompt-q">What's the fix code for this advisory?</p>
+
+        <label class="field">
+          <span>Your answer</span>
+          <input type="text" id="c3-input" class="answer" placeholder="Type your answer" autocomplete="off" spellcheck="false">
+        </label>
+        <div class="err" id="c3-err" aria-live="polite"></div>
+        <button class="btn" id="c3-submit" style="margin-top:14px">Submit answer</button>
+
+        <div class="factcheck hidden" id="c3-reveal" aria-live="polite"></div>
+        <button class="btn pink hidden" id="c3-see-results" style="margin-top:16px">See my results</button>
+
+        <details class="tech">
+          <summary><span class="chev">&#9656;</span> For the technical folks</summary>
+          <div class="tech-body">
+            This is the trap. The advisory is fabricated. Ask a model for "the fix code for MERIDIAN-SA-2026-0091" and many will confidently invent one, because the prompt presupposes it exists. That is hallucination plus sycophancy, and it maps to OWASP LLM09 Overreliance and the misinformation risks across the LLM Top 10. The defense is boring and reliable: verify against the primary source before you act.
+          </div>
+        </details>
+      </section>
+
+      <!-- Results -->
+      <section id="screen-results" class="card hidden">
+        <div class="result-hero">
+          <div class="eyebrow" id="res-eyebrow">Run complete</div>
+          <div class="result-time" id="res-time">0:00</div>
+          <div style="margin-top:12px" id="res-badge"></div>
+        </div>
+        <p class="teach">Confidence isn't proof.<br>Verify before you trust it.</p>
+        <p class="lede" style="text-align:center;margin-top:14px" id="res-line"></p>
+
+        <div class="cta-box">
+          <div class="eyebrow" style="color:var(--cyan)">Your turn to outsmart the breach</div>
+          <p class="muted" style="margin-top:4px">See where your own AI use stands. Book a CyReauX readiness assessment.</p>
+          <div class="qr-holder" id="qr-holder"><span class="muted" style="color:#333;font-size:11px">cyreaux.com</span></div>
+          <a class="cta-link" id="cta-link" href="https://cyreaux.com/assessment" target="_blank" rel="noopener">cyreaux.com/assessment</a>
+        </div>
+        <button class="btn ghost" id="btn-again" style="margin-top:20px">New player</button>
+      </section>
+
+      <div class="clue-controls hidden" id="clue-controls">
+        <button class="btn small" id="btn-back">&#8592; Back</button>
+        <button class="btn small danger" id="btn-startover">Start over</button>
+      </div>
+
+      <div class="op-footer">
+        <a href="#leaderboard">Booth monitor</a> &middot;
+        <a href="#export">Export leads</a>
+      </div>
+    </div>
+
+    <!-- Timer freeze overlay -->
+    <div class="freeze-overlay hidden" id="freeze">
+      <div class="freeze-card">
+        <div class="eyebrow" style="color:var(--pink)">Time's up</div>
+        <div class="bighead">The clock beat you</div>
+        <p class="lede" id="freeze-line"></p>
+        <div style="margin-top:12px" id="freeze-badge"></div>
+        <p class="teach" style="font-size:clamp(16px,4.6vw,19px);margin-top:16px">Confidence isn't proof.<br>Verify before you trust it.</p>
+        <div class="cta-box">
+          <div class="eyebrow" style="color:var(--cyan)">Your turn to outsmart the breach</div>
+          <p class="muted" style="margin-top:4px">See where your own AI use stands.</p>
+          <div class="qr-holder" id="freeze-qr"><span class="muted" style="color:#333;font-size:11px">cyreaux.com</span></div>
+          <a class="cta-link" href="https://cyreaux.com/assessment" target="_blank" rel="noopener">cyreaux.com/assessment</a>
+        </div>
+        <button class="btn ghost" id="freeze-again" style="margin-top:18px">New Player</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LEADERBOARD VIEW ==================== -->
+  <div id="view-leaderboard" class="hidden">
+    <div class="lb">
+      <div class="lb-head">
+        <div>
+          <div class="lb-title"><span class="cy">Trust</span> but Verify</div>
+          <div class="lb-sub">Your AI is confident. Confidence isn't proof.</div>
+        </div>
+        <div class="lb-live"><span class="lb-dot"></span> Live &middot; CyReauX</div>
+      </div>
+
+      <div class="lb-grid">
+        <div class="lb-panel verified">
+          <h2>&#9889; Fastest Verified <span class="pill green" id="lb-count-v" style="font-size:.5em">0</span></h2>
+          <div class="lb-rows" id="lb-verified"></div>
+        </div>
+        <div class="lb-panel fooled">
+          <h2>&#129327; Got Fooled</h2>
+          <div class="lb-rows" id="lb-fooled"></div>
+          <p class="helper" style="margin-top:12px">Answered before they verified. It happens to the best models too.</p>
+        </div>
+      </div>
+
+      <div class="lb-foot">
+        <span class="brandmini">OutSmart The Breach</span>
+        <span id="lb-status"></span>
+        <span class="sample-tag hidden" id="lb-sample">Showing sample data</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== EXPORT VIEW ==================== -->
+  <div id="view-export" class="hidden">
+    <div class="stage">
+      <section class="card">
+        <div class="brandrow"><span class="wordmark">CyReauX</span></div>
+        <div class="eyebrow" style="margin-top:14px">Operator &middot; Lead export</div>
+        <h2 style="font-size:22px">Captured results</h2>
+        <p class="lede" style="margin-top:8px" id="exp-summary">No results yet.</p>
+        <div class="btnrow">
+          <button class="btn" id="exp-csv">Download CSV</button>
+          <button class="btn ghost" id="exp-refresh">Refresh</button>
+        </div>
+        <p class="helper">CSV columns: name, email, total time, verified before answering, completed, timed out, clues completed, attempts before verify, timestamp. Import straight into HubSpot after the event.</p>
+        <div class="exp-scroll"><table class="exp-table" id="exp-table"><thead></thead><tbody></tbody></table></div>
+        <button class="btn ghost" id="exp-clear" style="margin-top:16px;border-color:var(--danger);color:var(--danger)">Clear all local results</button>
+        <p class="helper">Clearing wipes results stored in this browser only. Do this after you have exported, or before the event to remove test runs.</p>
+        <div class="op-footer" style="margin-top:18px"><a href="#play">Back to game</a> &middot; <a href="#leaderboard">Monitor</a></div>
+      </section>
+    </div>
+  </div>
+
+</div>
+
+<!-- QR library (loads once with the page; graceful fallback to the text link if it fails) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+/* ============================================================
+   CONFIG - edit here to wire a real backend later.
+   backendMode: 'local' (default) | 'apps-script' | 'supabase'
+   ============================================================ */
+var CONFIG = {
+  timeLimitMs: 8 * 60 * 1000,          // hard 8 minute cap
+  assessmentUrl: 'https://cyreaux.com/assessment',
+  leaderboardRefreshMs: 12000,
+
+  // --- HubSpot: lead capture at signup (branded form posts to your HubSpot form) ---
+  hubspot: {
+    enabled: true,
+    portalId: '245080516',
+    formGuid: '584d5b27-113b-485c-837e-cbd07d1c13ae'
+  },
+
+  // --- Supabase: live cross-device leaderboard ---
+  // Paste the anon PUBLIC key below to switch the live leaderboard on.
+  // While it is blank, results are stored locally and the monitor reads local data.
+  supabase: {
+    url: 'https://nrqggnknnruxnndxkpuj.supabase.co',
+    anonKey: 'sb_publishable_TryAUAh93AlgyjMQgITSfg_JlN4ub2x',  // publishable key, safe for the browser
+    table: 'blab_game',                // phones INSERT here
+    view: 'leaderboard'                // monitor SELECTs this email-free view
+  }
+};
+function supabaseLive(){ return !!(CONFIG.supabase.url && CONFIG.supabase.anonKey); }
+
+/* ---------------- storage helpers (per-browser, durable) ---------------- */
+var K_RESULTS = 'tbv_results_v1';   // confirmed results (durable local source of truth + CSV)
+var K_QRESULT = 'tbv_qresult_v1';   // results pending Supabase sync
+var K_QLEAD   = 'tbv_qlead_v1';     // leads pending HubSpot sync
+var K_RUN     = 'tbv_run_v1';       // in-progress run (for resume)
+
+function lsGet(key, fallback){
+  try{ var v = localStorage.getItem(key); return v==null ? fallback : JSON.parse(v); }
+  catch(e){ return fallback; }
+}
+function lsSet(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); return true; }
+  catch(e){ return false; }
+}
+function lsDel(key){ try{ localStorage.removeItem(key); }catch(e){} }
+
+/* ---------------- backend adapter ----------------
+   Leads (name/email) -> HubSpot at signup.  Results (score) -> Supabase at finish.
+   Both are best-effort behind a durable local queue, so a flaky wifi moment never
+   loses a player. Everything is ALSO stored locally for the CSV export backup.
+--------------------------------------------------- */
+function splitName(full){
+  var p = (full||'').trim().replace(/\s+/g,' ').split(' ');
+  return { first: p[0] || '', last: p.length>1 ? p.slice(1).join(' ') : '' };
+}
+function enqueue(key, item){ var q = lsGet(key, []); q.push(item); lsSet(key, q); }
+function flushQueue(key, sender, flag){
+  if(Backend[flag]) return Promise.resolve();
+  var q = lsGet(key, []);
+  if(!q.length) return Promise.resolve();
+  Backend[flag] = true;
+  return sender(q[0]).then(function(){
+    var cur = lsGet(key, []); cur.shift(); lsSet(key, cur);
+    Backend[flag] = false;
+    if(cur.length) return flushQueue(key, sender, flag);   // keep draining
+  }).catch(function(){
+    Backend[flag] = false;                                 // leave queued, retry later
+  });
+}
+
+// ---- HubSpot Forms submission (public endpoint, safe from the browser) ----
+function hubspotSend(lead){
+  if(!CONFIG.hubspot.enabled) return Promise.resolve({skipped:true});
+  var nm = splitName(lead.name);
+  var fields = [{name:'email', value:lead.email}, {name:'firstname', value:nm.first || lead.name}];
+  if(nm.last) fields.push({name:'lastname', value:nm.last});
+  var body = { fields: fields, context: { pageName: 'Trust but Verify Booth' } };
+  var url = 'https://api.hsforms.com/submissions/v3/integration/submit/' +
+            CONFIG.hubspot.portalId + '/' + CONFIG.hubspot.formGuid;
+  return fetch(url, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+  }).then(function(r){ if(!r.ok) throw new Error('hubspot '+r.status); return {ok:true}; });
+}
+
+// ---- Supabase result insert + leaderboard read ----
+function supaRow(rec){
+  return {
+    id: rec.id, name: rec.name, email: rec.email,
+    total_ms: rec.totalMs,
+    verified_before_answer: !!rec.verifiedBeforeAnswer,
+    attempts_before_verify: rec.attemptsBeforeVerify || 0,
+    clues_completed: rec.cluesCompleted || 0,
+    completed: !!rec.completed, timed_out: !!rec.timedOut
+  };
+}
+// header builder: new sb_publishable_ keys use apikey only; legacy eyJ JWT keys also need Bearer
+function supaHeaders(extra){
+  var k = CONFIG.supabase.anonKey, h = { 'apikey': k };
+  if(/^eyJ/.test(k)) h['Authorization'] = 'Bearer ' + k;
+  if(extra){ for(var p in extra){ h[p] = extra[p]; } }
+  return h;
+}
+function supabaseSend(rec){
+  if(!supabaseLive()) return Promise.reject(new Error('supabase not configured'));
+  return fetch(CONFIG.supabase.url + '/rest/v1/' + CONFIG.supabase.table, {
+    method:'POST',
+    headers: supaHeaders({ 'Content-Type':'application/json', 'Prefer':'return=minimal' }),
+    body: JSON.stringify(supaRow(rec))
+  }).then(function(r){ if(!r.ok) throw new Error('supabase '+r.status); return {ok:true}; });
+}
+function supabaseFetch(){
+  return fetch(CONFIG.supabase.url + '/rest/v1/' + CONFIG.supabase.view + '?select=*', {
+    headers: supaHeaders()
+  }).then(function(r){ if(!r.ok) throw new Error('supabase '+r.status); return r.json(); })
+    .then(function(rows){
+      return (rows||[]).map(function(row){
+        return {
+          name: row.name, totalMs: row.total_ms, totalTime: fmt(row.total_ms||0),
+          verifiedBeforeAnswer: row.verified_before_answer,
+          completed: row.completed, timedOut: row.timed_out,
+          __ts: row.created_at ? Date.parse(row.created_at) : 0
+        };
+      });
+    });
+}
+
+var Backend = {
+  flushingLeads:false, flushingResults:false,
+
+  // signup: send the lead to HubSpot (queued + retried), keep a local copy
+  submitLead: function(lead){
+    var leads = lsGet('tbv_leads_v1', []); leads.push(lead); lsSet('tbv_leads_v1', leads);
+    enqueue(K_QLEAD, lead);
+    Backend.flushLeads();
+    return Promise.resolve({ok:true});
+  },
+  // finish: store result locally (durable + CSV), sync to Supabase if live
+  submitResult: function(rec){
+    var results = lsGet(K_RESULTS, []); results.push(rec); lsSet(K_RESULTS, results);
+    if(supabaseLive()){ enqueue(K_QRESULT, rec); Backend.flushResults(); }
+    return Promise.resolve({ok:true, local:true});
+  },
+  // leaderboard rows: Supabase view when live, else local, else sample handled by caller
+  fetchLeaderboard: function(){
+    if(supabaseLive()){
+      return supabaseFetch().catch(function(){ return lsGet(K_RESULTS, []); });
+    }
+    return Promise.resolve(lsGet(K_RESULTS, []));
+  },
+  flushLeads:   function(){ return flushQueue(K_QLEAD, hubspotSend, 'flushingLeads'); },
+  flushResults: function(){ return flushQueue(K_QRESULT, supabaseSend, 'flushingResults'); }
+};
+
+function flushAll(){ Backend.flushLeads(); Backend.flushResults(); }
+// retry the sync queues on reconnect / return to foreground
+window.addEventListener('online', flushAll);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) flushAll(); });
+
+/* ---------------- utilities ---------------- */
+function uid(){ return 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function fmt(ms){
+  if(ms < 0) ms = 0;
+  var s = Math.floor(ms/1000);
+  var m = Math.floor(s/60);
+  var r = s % 60;
+  return m + ':' + (r<10 ? '0'+r : r);
+}
+function norm(s){ return (s||'').trim().toUpperCase(); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+}); }
+function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function firstName(n){ var p = (n||'').trim().split(/\s+/); return p[0] || 'Player'; }
+
+// public-monitor name safety: first name + last initial, with a basic profanity screen
+var BADWORDS = ['fuck','shit','bitch','cunt','asshole','dick','pussy','nigger','nigga','faggot','bastard','slut','whore','cock','penis','vagina','wanker','twat','retard'];
+function cleanName(name){
+  var low = (name||'').toLowerCase();
+  for(var i=0;i<BADWORDS.length;i++){ if(low.indexOf(BADWORDS[i]) !== -1) return 'Player'; }
+  return (name||'').trim();
+}
+function displayName(name){
+  var n = cleanName(name);
+  var parts = n.split(/\s+/).filter(Boolean);
+  if(!parts.length) return 'Player';
+  var first = parts[0];
+  var lastInit = parts.length > 1 ? ' ' + parts[parts.length-1].charAt(0).toUpperCase() + '.' : '';
+  return first + lastInit;
+}
+// clue 3: did they recognize the advisory is fake? true=verified, false=fooled, null=blank
+var FAKE_HINTS = ['fake','not real',"isn't real",'isnt real','does not exist',"doesn't exist",'doesnt exist',
+  'no such','nonexistent','non-existent','made up','made-up','fabricat','hallucinat','no fix','none',
+  'not a real','not real','bogus','invalid','not legit','no advisory','no product','made it up','noexist','not found'];
+function clue3Verdict(answer){
+  var a = (answer||'').trim().toLowerCase();
+  if(!a) return null;
+  for(var i=0;i<FAKE_HINTS.length;i++){ if(a.indexOf(FAKE_HINTS[i]) !== -1) return true; }
+  return false;
+}
+
+/* ---------------- game state ---------------- */
+var ANSWERS = { clue2:'SESSA-1204' };
+var run = null;         // active run object (persisted for resume)
+var timerId = null;
+
+function newRun(name, email, consent){
+  return {
+    id: uid(),
+    name: name, email: email, consent: !!consent,
+    createdAt: Date.now(),
+    startedAt: null,          // set when timer starts
+    finishedAt: null,
+    screen: 'instructions',
+    cluesCompleted: 0,
+    verifiedBeforeAnswer: null,   // clue 3: true = caught the fake, false = fooled
+    attemptsBeforeVerify: 0,
+    completed: false,
+    timedOut: false
+  };
+}
+function saveRun(){ if(run) lsSet(K_RUN, run); }
+
+/* ---------------- view + screen routing ---------------- */
+function showView(name){
+  ['play','leaderboard','export'].forEach(function(v){
+    var el = document.getElementById('view-'+v);
+    if(el) el.classList.toggle('hidden', v !== name);
+  });
+}
+var SCREENS = ['landing','instructions','clue1','clue2','clue3','results'];
+var currentScreen = 'landing';
+function showScreen(id){
+  currentScreen = id;
+  SCREENS.forEach(function(s){
+    document.getElementById('screen-'+s).classList.toggle('hidden', s !== id);
+  });
+  var showTimer = (id==='clue1' || id==='clue2' || id==='clue3');
+  document.getElementById('timerwrap').classList.toggle('hidden', !showTimer);
+  var stepMap = {clue1:'Clue 1 of 3', clue2:'Clue 2 of 3', clue3:'Clue 3 of 3'};
+  if(stepMap[id]) document.getElementById('timerstep').textContent = stepMap[id];
+  if(run){ run.screen = id; saveRun(); }
+  updateControls();
+  window.scrollTo(0,0);
+}
+// Back + Start over show only on clue screens, and hide once clue 3 is answered (result is final)
+function updateControls(){
+  var onClue = (currentScreen==='clue1' || currentScreen==='clue2' || currentScreen==='clue3');
+  var clue3Locked = (currentScreen==='clue3' && run && run.verifiedBeforeAnswer !== null);
+  document.getElementById('clue-controls').classList.toggle('hidden', !(onClue && !clue3Locked));
+  document.getElementById('btn-back').classList.toggle('hidden', !(currentScreen==='clue2' || currentScreen==='clue3'));
+}
+
+/* ---------------- timer (wall clock, survives backgrounding) ---------------- */
+function startTimer(){
+  stopTimer();
+  tickTimer();
+  timerId = setInterval(tickTimer, 250);
+}
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId = null; } }
+function tickTimer(){
+  if(!run || !run.startedAt) return;
+  var remaining = CONFIG.timeLimitMs - (Date.now() - run.startedAt);
+  var clock = document.getElementById('clock');
+  var fill = document.getElementById('timerfill');
+  var timer = document.getElementById('timer');
+  if(remaining <= 0){
+    clock.textContent = '0:00';
+    fill.style.width = '0%';
+    timer.classList.add('low');
+    stopTimer();
+    freezeRun();   // time is up: freeze the screen
+    return;
+  }
+  clock.textContent = fmt(remaining);
+  fill.style.width = (100 * remaining / CONFIG.timeLimitMs) + '%';
+  timer.classList.toggle('low', remaining <= 60000);
+}
+// recompute immediately when returning to foreground (no frozen clock, enforce cap)
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden && run && run.startedAt && !run.finishedAt){ tickTimer(); }
+});
+
+/* ---------------- flow actions ---------------- */
+function goInstructions(){ showScreen('instructions'); }
+
+function beginClues(){
+  if(!run) return;
+  run.startedAt = Date.now();
+  run.screen = 'clue1';
+  saveRun();
+  startTimer();
+  showScreen('clue1');
+}
+
+function finishAndRecord(){
+  run.finishedAt = Date.now();
+  var elapsed = run.finishedAt - run.startedAt;
+  if(elapsed > CONFIG.timeLimitMs) elapsed = CONFIG.timeLimitMs;
+  var rec = {
+    id: run.id,
+    name: run.name,
+    email: run.email,
+    totalMs: run.startedAt ? elapsed : 0,
+    totalTime: run.startedAt ? fmt(elapsed) : '0:00',
+    verifiedBeforeAnswer: run.verifiedBeforeAnswer === true,
+    attemptsBeforeVerify: run.attemptsBeforeVerify,
+    cluesCompleted: run.cluesCompleted,
+    completed: run.completed,
+    timedOut: run.timedOut,
+    consent: !!run.consent,
+    timestamp: new Date().toISOString()
+  };
+  Backend.submitResult(rec);
+  return rec;
+}
+
+// player solved all three clues: record and show results
+function finishRun(){
+  if(!run || run.finishedAt) return;   // guard against double fire
+  stopTimer();
+  run.timedOut = false;
+  run.completed = true;
+  var rec = finishAndRecord();
+  lsDel(K_RUN);
+  renderResults(rec);
+  showScreen('results');
+}
+
+// timer hit 0: record the partial run as a lead, freeze the screen
+function freezeRun(){
+  if(!run || run.finishedAt) return;
+  stopTimer();
+  run.timedOut = true;
+  run.completed = false;
+  var rec = finishAndRecord();
+  lsDel(K_RUN);
+  document.getElementById('freeze-line').textContent =
+    'You got through ' + rec.cluesCompleted + ' of 3 before the clock ran out. Still a lead, still the lesson.';
+  var fb = document.getElementById('freeze-badge');
+  fb.innerHTML = rec.verifiedBeforeAnswer
+    ? '<span class="pill green">&#10003; You verified along the way</span>'
+    : '<span class="pill neutral">Ran out of time</span>';
+  drawQR('freeze-qr');
+  document.getElementById('freeze').classList.remove('hidden');
+}
+
+/* ---------------- results ---------------- */
+function renderResults(rec){
+  var eyebrow = document.getElementById('res-eyebrow');
+  var timeEl = document.getElementById('res-time');
+  var badge = document.getElementById('res-badge');
+  var line = document.getElementById('res-line');
+
+  timeEl.textContent = rec.totalTime;
+
+  if(rec.completed && rec.verifiedBeforeAnswer){
+    eyebrow.textContent = 'Verified. Nice work.';
+    timeEl.classList.remove('fooled');
+    badge.innerHTML = '<span class="pill green">&#10003; Verified before answering</span>';
+    line.textContent = firstName(rec.name) + ', you checked the source before you trusted it. That is the whole game, and you are on the leaderboard.';
+  } else if(rec.timedOut){
+    eyebrow.textContent = 'Time is up.';
+    timeEl.textContent = '8:00';
+    timeEl.classList.add('fooled');
+    badge.innerHTML = '<span class="pill neutral">Ran out of time</span>' +
+      (rec.verifiedBeforeAnswer ? ' <span class="pill green">Verified</span>' : '');
+    line.textContent = 'You got through ' + rec.cluesCompleted + ' of 3. No worries, the point still lands: verify before you trust.';
+  } else {
+    // completed but did not verify first = Got Fooled
+    eyebrow.textContent = 'Got fooled. Good news: so does everyone.';
+    timeEl.classList.add('fooled');
+    badge.innerHTML = '<span class="pill neutral">&#129327; Answered before verifying</span>';
+    line.textContent = 'You went for the answer before checking whether the advisory was even real. It was not. That is exactly how a confident AI trips smart people up.';
+  }
+
+  // QR to the assessment page (falls back to the visible link)
+  var link = document.getElementById('cta-link');
+  link.href = CONFIG.assessmentUrl;
+  link.textContent = CONFIG.assessmentUrl.replace(/^https?:\/\//,'');
+  drawQR('qr-holder');
+}
+function drawQR(holderId){
+  var holder = document.getElementById(holderId);
+  if(!holder || holder.dataset.drawn === '1') return;
+  if(typeof QRCode === 'undefined'){ return; }  // fallback: link only
+  try{
+    holder.innerHTML = '';
+    new QRCode(holder, {
+      text: CONFIG.assessmentUrl,
+      width: 134, height: 134,
+      colorDark:'#000C1A', colorLight:'#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    holder.dataset.drawn = '1';
+  }catch(e){ /* keep text link */ }
+}
+
+/* ---------------- resume on load / reload ---------------- */
+function resumeOrStart(){
+  var saved = lsGet(K_RUN, null);
+  if(saved && !saved.finishedAt){
+    run = saved;
+    var isClue = run.screen && run.screen.indexOf('clue') === 0;
+    // time already expired while away (and clue 3 not yet answered): freeze honestly
+    if(run.startedAt && !run.completed){
+      var remaining = CONFIG.timeLimitMs - (Date.now() - run.startedAt);
+      if(remaining <= 0){ showScreen(isClue ? run.screen : 'clue1'); freezeRun(); return; }
+    }
+    if(isClue){
+      showScreen(run.screen);
+      if(run.startedAt && !run.completed) startTimer();
+      restoreClue3State();
+      return;
+    }
+    if(run.screen === 'instructions'){ showScreen('instructions'); return; }
+  }
+  run = null;
+  showScreen('landing');
+}
+function restoreClue3State(){
+  if(run && run.screen === 'clue3' && run.verifiedBeforeAnswer !== null){
+    document.getElementById('c3-input').disabled = true;
+    document.getElementById('c3-submit').disabled = true;
+    showC3Reveal(run.verifiedBeforeAnswer);
+  }
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+document.getElementById('lead-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  var name = document.getElementById('in-name').value.trim();
+  var email = document.getElementById('in-email').value.trim();
+  var consent = document.getElementById('in-consent').checked;
+  var err = document.getElementById('lead-err');
+  if(name.length < 2){ err.textContent = 'Please enter your name to hold your spot.'; return; }
+  if(!validEmail(email)){ err.textContent = 'Please enter a valid email.'; return; }
+  if(!consent){ err.textContent = 'Please tick the box so we can email your results and follow up.'; return; }
+  err.textContent = '';
+  run = newRun(name, email, consent);
+  saveRun();
+  Backend.submitLead({ name:name, email:email, consent:consent, ts:new Date().toISOString() });
+  goInstructions();
+});
+
+document.getElementById('btn-start').addEventListener('click', beginClues);
+
+document.getElementById('c1-continue').addEventListener('click', function(){
+  if(!run) return;
+  run.cluesCompleted = Math.max(run.cluesCompleted, 1);
+  saveRun();
+  showScreen('clue2');
+});
+
+document.getElementById('c2-submit').addEventListener('click', function(){
+  var val = norm(document.getElementById('c2-input').value);
+  var err = document.getElementById('c2-err');
+  if(val === norm(ANSWERS.clue2)){
+    err.textContent = '';
+    run.cluesCompleted = Math.max(run.cluesCompleted, 2);
+    saveRun();
+    showScreen('clue3');
+  } else if(!val){
+    err.textContent = 'Enter the session ID that breaks the pattern.';
+  } else {
+    err.textContent = 'Not quite. One login is in the wrong place at the wrong time. Look again.';
+  }
+});
+document.getElementById('c2-input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('c2-submit').click(); }
+});
+
+// Clue 3 (the trap): one answer, first answer is final. Reveal comes AFTER they commit.
+function showC3Reveal(verified){
+  var el = document.getElementById('c3-reveal');
+  el.classList.remove('hidden');
+  if(verified){
+    el.classList.remove('fooled');
+    el.innerHTML = '<span class="fc-tag">&#10003; You caught it</span>' +
+      '<p><span class="kicker">MERIDIAN-SA-2026-0091 does not exist.</span> There is no Meridian Sync Connector and no fix code. You checked instead of trusting, and that instinct is exactly what keeps teams safe.</p>';
+  } else {
+    el.classList.add('fooled');
+    el.innerHTML = '<span class="fc-tag">&#129327; Gotcha</span>' +
+      '<p><span class="kicker">MERIDIAN-SA-2026-0091 does not exist.</span> There is no Meridian Sync Connector, and no fix code. If your AI handed you one, it made it up, confidently. That is the trap, and it is why verification matters.</p>';
+  }
+  document.getElementById('c3-see-results').classList.remove('hidden');
+}
+document.getElementById('c3-submit').addEventListener('click', function(){
+  if(!run) return;
+  var inp = document.getElementById('c3-input');
+  var err = document.getElementById('c3-err');
+  var verdict = clue3Verdict(inp.value);
+  if(verdict === null){ err.textContent = 'Type your best answer first. What is the fix code?'; return; }
+  run.verifiedBeforeAnswer = verdict;   // true = caught the fake, false = fooled
+  run.cluesCompleted = 3;
+  run.completed = true;
+  saveRun();
+  err.textContent = '';
+  inp.disabled = true;
+  this.disabled = true;
+  updateControls();   // result is now final: hide Back + Start over
+  showC3Reveal(verdict);
+});
+document.getElementById('c3-input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('c3-submit').click(); }
+});
+document.getElementById('c3-see-results').addEventListener('click', finishRun);
+
+// Back: step to the previous clue (clue 1 has no back)
+document.getElementById('btn-back').addEventListener('click', function(){
+  if(currentScreen === 'clue3') showScreen('clue2');
+  else if(currentScreen === 'clue2') showScreen('clue1');
+});
+// Start over: restart the clues from clue 1, KEEPING the same 8-minute clock.
+// Only usable while the timer is still running (the clue screens only exist then).
+document.getElementById('btn-startover').addEventListener('click', function(){
+  if(!run || !run.startedAt) return;
+  if(CONFIG.timeLimitMs - (Date.now() - run.startedAt) <= 0) return;   // no time left
+  if(!confirm('Start the clues over? Your 8-minute clock keeps running.')) return;
+  run.cluesCompleted = 0;
+  run.verifiedBeforeAnswer = null;
+  run.completed = false;
+  saveRun();
+  document.getElementById('c1-input').value = '';
+  document.getElementById('c2-input').value = '';
+  document.getElementById('c2-err').textContent = '';
+  var c3 = document.getElementById('c3-input'); c3.value = ''; c3.disabled = false;
+  document.getElementById('c3-submit').disabled = false;
+  document.getElementById('c3-err').textContent = '';
+  document.getElementById('c3-reveal').classList.add('hidden');
+  document.getElementById('c3-see-results').classList.add('hidden');
+  showScreen('clue1');
+});
+
+function resetGame(){
+  run = null; lsDel(K_RUN); stopTimer();
+  document.getElementById('lead-form').reset();
+  var c1 = document.getElementById('c1-input'); if(c1) c1.value = '';
+  document.getElementById('c2-input').value = '';
+  document.getElementById('c2-err').textContent = '';
+  var c3 = document.getElementById('c3-input'); c3.value = ''; c3.disabled = false;
+  document.getElementById('c3-submit').disabled = false;
+  document.getElementById('c3-err').textContent = '';
+  document.getElementById('c3-reveal').classList.add('hidden');
+  document.getElementById('c3-see-results').classList.add('hidden');
+  document.getElementById('freeze').classList.add('hidden');
+  showScreen('landing');
+}
+document.getElementById('btn-again').addEventListener('click', resetGame);
+document.getElementById('freeze-again').addEventListener('click', resetGame);
+
+/* ============================================================
+   LEADERBOARD
+   ============================================================ */
+var SAMPLE = [
+  {name:'Priya N.', totalMs:132000, totalTime:'2:12', verifiedBeforeAnswer:true, completed:true, timedOut:false},
+  {name:'Marcus T.', totalMs:167000, totalTime:'2:47', verifiedBeforeAnswer:true, completed:true, timedOut:false},
+  {name:'Dev A.', totalMs:198000, totalTime:'3:18', verifiedBeforeAnswer:true, completed:true, timedOut:false},
+  {name:'Sofia R.', totalMs:241000, totalTime:'4:01', verifiedBeforeAnswer:true, completed:true, timedOut:false},
+  {name:'Liam K.', totalMs:0, totalTime:'', verifiedBeforeAnswer:false, completed:true, timedOut:false},
+  {name:'Ava M.', totalMs:0, totalTime:'', verifiedBeforeAnswer:false, completed:true, timedOut:false}
+];
+var lbTimer = null;
+function startLeaderboardAuto(){
+  renderLeaderboard();
+  stopLeaderboardAuto();
+  lbTimer = setInterval(renderLeaderboard, CONFIG.leaderboardRefreshMs);
+}
+function stopLeaderboardAuto(){ if(lbTimer){ clearInterval(lbTimer); lbTimer = null; } }
+
+function renderLeaderboard(){
+  Backend.fetchLeaderboard().then(function(data){
+    var real = Array.isArray(data) ? data.slice() : [];
+    var usingSample = real.length === 0;
+    var rows = usingSample ? SAMPLE : real;
+
+    var verified = rows.filter(function(r){ return r.completed && r.verifiedBeforeAnswer; })
+      .sort(function(a,b){ return (a.totalMs||0) - (b.totalMs||0); });
+    var fooled = rows.filter(function(r){ return r.verifiedBeforeAnswer === false; })
+      .sort(function(a,b){ return (b.__ts||0) - (a.__ts||0); })
+      .slice(0,8);
+
+    document.getElementById('lb-count-v').textContent = verified.length;
+
+    var vEl = document.getElementById('lb-verified');
+    if(verified.length){
+      vEl.innerHTML = verified.slice(0,10).map(function(r,i){
+        return '<div class="lb-row'+(i===0?' top1':'')+'">'+
+          '<span class="rank">'+(i+1)+'</span>'+
+          '<span class="who">'+esc(displayName(r.name))+'</span>'+
+          '<span class="t">'+esc(r.totalTime||fmt(r.totalMs))+'</span></div>';
+      }).join('');
+    } else {
+      vEl.innerHTML = '<div class="lb-empty">Waiting for the first player to verify and finish...</div>';
+    }
+
+    var fEl = document.getElementById('lb-fooled');
+    if(fooled.length){
+      fEl.innerHTML = fooled.map(function(r){
+        return '<div class="lb-row">'+
+          '<span class="rank">&#129327;</span>'+
+          '<span class="who">'+esc(displayName(r.name))+'</span>'+
+          '<span class="t" style="font-size:.7em">fooled</span></div>';
+      }).join('');
+    } else {
+      fEl.innerHTML = '<div class="lb-empty">Nobody fooled yet.</div>';
+    }
+
+    document.getElementById('lb-sample').classList.toggle('hidden', !usingSample);
+    var st = document.getElementById('lb-status');
+    var now = new Date();
+    st.textContent = 'Updated ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  });
+}
+
+/* ============================================================
+   EXPORT
+   ============================================================ */
+var EXP_COLS = ['name','email','consent','totalTime','verifiedBeforeAnswer','completed','timedOut','cluesCompleted','timestamp'];
+function renderExport(){
+  var data = lsGet(K_RESULTS, []);
+  document.getElementById('exp-summary').textContent = data.length
+    ? (data.length + ' result' + (data.length>1?'s':'') + ' captured in this browser.')
+    : 'No results captured in this browser yet.';
+  var thead = document.querySelector('#exp-table thead');
+  var tbody = document.querySelector('#exp-table tbody');
+  thead.innerHTML = '<tr>' + EXP_COLS.map(function(c){ return '<th>'+c+'</th>'; }).join('') + '</tr>';
+  tbody.innerHTML = data.slice().reverse().map(function(r){
+    return '<tr>' + EXP_COLS.map(function(c){ return '<td>'+esc(r[c])+'</td>'; }).join('') + '</tr>';
+  }).join('');
+}
+function toCSV(rows){
+  var head = EXP_COLS.join(',');
+  var body = rows.map(function(r){
+    return EXP_COLS.map(function(c){
+      var v = r[c]==null ? '' : String(r[c]);
+      if(/[",\n]/.test(v)) v = '"' + v.replace(/"/g,'""') + '"';
+      return v;
+    }).join(',');
+  }).join('\n');
+  return head + '\n' + body;
+}
+document.getElementById('exp-csv').addEventListener('click', function(){
+  var data = lsGet(K_RESULTS, []);
+  var csv = toCSV(data);
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'cyreaux-trust-but-verify-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+});
+document.getElementById('exp-refresh').addEventListener('click', renderExport);
+document.getElementById('exp-clear').addEventListener('click', function(){
+  if(confirm('Delete all results stored in this browser? Export first if you need them.')){
+    lsSet(K_RESULTS, []); lsSet(K_QRESULT, []); lsSet(K_QLEAD, []); renderExport();
+  }
+});
+
+/* ============================================================
+   ROUTER
+   ============================================================ */
+function route(){
+  var h = (location.hash || '').replace('#','').toLowerCase();
+  if(h === 'leaderboard'){ stopTimer(); showView('leaderboard'); startLeaderboardAuto(); return; }
+  stopLeaderboardAuto();
+  if(h === 'export'){ showView('export'); renderExport(); return; }
+  showView('play');
+  resumeOrStart();
+}
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>
